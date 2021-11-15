@@ -38,7 +38,7 @@ def handleReqConnection(addr):
 
 def handleReqShowAll():
     data = json.loads(data_json[0])
-    
+    print(data['name'])
 
 
 def handleReq(request, addr):
