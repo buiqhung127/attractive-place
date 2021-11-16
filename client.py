@@ -1,4 +1,5 @@
 import socket
+import json
 
 BUFFER_SIZE = 1024
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -20,10 +21,24 @@ def sendReqDownOne():
     id_attraction = input('Input the name of attraction')
     id_image = input('Input the id of the image')
 
+
+def handleEventShowAll():
+    encoded_event, add = s.recvfrom(BUFFER_SIZE)  
+    data = encoded_event.decode('utf-8')
+    data = data.split(';')
+    final_data = [] 
+    for datum in data[1:] : 
+        # print('|'+str(datum)+'|')
+        # print('\n')
+        datum = json.loads(str(datum))
+        final_data.append(datum)
+    return final_data
+
 def processCommandLine(cmd=4): 
     global IS_RUNNING
     if (cmd == 1):
         sendReqShowAll()
+        handleEventShowAll()
     elif (cmd == 2):
         sendReqShowOne()
     elif (cmd == 3):
@@ -32,26 +47,32 @@ def processCommandLine(cmd=4):
         IS_RUNNING = False
 
     if IS_RUNNING : 
-        handleEventFromServer() 
-
-
-def handleEventFromServer(): 
-    """
-    Type 1 : 
-    REQUESTTYPE._.ID._.NAME._.XCOORDINATE._.YCOORDINATE._.DESCRIPTION._.NUM_OF_IMAGES._.IMAGES.....
-    Example : 1._.123123312._.Chua Thien Mu._.312._.139._noi day la mot danh lam._.5._.3j1319kl54iu2......
-    """
-    encoded_event, add = s.recvfrom(BUFFER_SIZE)  
-    event = encoded_event.decode()
-
-    if event[0] == '1':
+        # handleEventFromServer() 
         pass
-    elif event[0] =='2' : 
-        pass 
-    elif event[0] == '3':
-        pass 
-    else :
-        pass
+
+
+
+
+# def handleEventFromServer(): 
+#     """
+#     Type 1 : 
+#     REQUESTTYPE._.ID._.NAME._.XCOORDINATE._.YCOORDINATE._.DESCRIPTION._.NUM_OF_IMAGES._.IMAGES.....
+#     Example : 1._.123123312._.Chua Thien Mu._.312._.139._noi day la mot danh lam._.5._.3j1319kl54iu2......
+#     """
+#     encoded_event, add = s.recvfrom(BUFFER_SIZE)  
+#     head, data = encoded_event.decode('utf-8')
+#     print(data[0:10])
+#     head = '0'
+#     if head == '0' : 
+#         pass
+#     elif head == '1':
+#         pass
+#     elif head == '2' : 
+#         pass 
+#     elif head == '3':
+#         pass 
+#     else :
+#         pass
         
 
 def receiveQueryFromKeyBoard(): 
@@ -70,6 +91,7 @@ if __name__ == '__main__':
     while IS_RUNNING:
         cmd = receiveQueryFromKeyBoard() 
         processCommandLine(cmd)
+
 
 
       
