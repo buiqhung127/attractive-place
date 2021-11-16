@@ -1,6 +1,8 @@
 import socket
 import json
 
+from client import handleEventShowAll
+
 
 
 MAXIMUM_CONNECTION = 10
@@ -65,14 +67,27 @@ def handleReqShowAll(addr):
     print('Handled the show all request !')
 
 
+def handleRequestShowOne(request, addr) :
+    request = request[1:]
+    print('|{}|'.format(request))
+    flag = False
+    for data in data_json: 
+        if (data['name'] == request):
+            s.sendto(bytes(json.dumps(data), encoding='utf-8'), addr)
+            flag = True
+    
+    if not flag:
+        s.sendto(bytes('Not Found', encoding='utf-8'), addr)
+
+
 def handleReq(request, addr):
-    if (request == '0'):
+    if (request[0] == '0'):
         handleReqConnection(addr)
-    elif (request == '1'):
+    elif (request[0] == '1'):
         handleReqShowAll(addr) 
-    elif (request == '2'):
-        pass
-    elif (request == '3'):
+    elif (request[0] == '2'):
+        handleRequestShowOne(request, addr) 
+    elif (request[0] == '3'):
         pass
     else:
         pass
@@ -83,18 +98,4 @@ if __name__ == '__main__':
         request, addr = receiveReq()
         handleReq(request, addr)
         
-
-# s.listen(10)
-# con, add = s.accept() 
-#     with con : 
-#         try :
-#             print('Connected by', add)
-#             s.sendto(b'You have connected to the server', add) 
-#             while True:
-#                 data = con.recv(BUFFER_SIZE) # udp
-#                 print(data)
-#                 if not data : 
-#                     break 
-#         finally : 
-#             s.close() 
 
