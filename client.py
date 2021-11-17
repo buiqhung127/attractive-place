@@ -44,10 +44,19 @@ def handleEventShowOne():
     if (data == 'Not Found'):
         print('The location is not found !')
     else:
-        print('|{}|'.format(data))
-    
-    return json.loads(data)
+        print('{}'.format(data))
 
+    return data # json.loads(data) # handle the data later, must convert to json
+
+def handleEventDown():
+    encoded_event, add = s.recvfrom(BUFFER_SIZE)
+    data = encoded_event.decode('utf-8')  
+    if (data == 'Not Found'):
+        print('The image is not found !')
+    else:
+        print('{}'.format(data))
+    # return json.loads(data)
+    return data # in json file, contain the not found string casee
 
 def processCommandLine(cmd=4): 
     global IS_RUNNING
@@ -59,6 +68,7 @@ def processCommandLine(cmd=4):
         handleEventShowOne()
     elif (cmd == 3):
         sendReqDownOne()
+        handleEventDown()
     else: 
         IS_RUNNING = False
 

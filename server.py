@@ -67,14 +67,30 @@ def handleReqShowAll(addr):
     print('Handled the show all request !')
 
 
-def handleRequestShowOne(request, addr) :
+def handleReqShowOne(request, addr) :
     request = request[1:]
-    print('|{}|'.format(request))
+    # print('|{}|'.format(request))
     flag = False
     for data in data_json: 
         if (data['name'] == request):
             s.sendto(bytes(json.dumps(data), encoding='utf-8'), addr)
             flag = True
+    
+    if not flag:
+        s.sendto(bytes('Not Found', encoding='utf-8'), addr)
+
+
+def handleReqDown(request, addr): 
+    request = request[1:]
+    request = request.split(';')
+    # print('|{}|'.format(request))
+    flag = False
+    for data in data_json: 
+        if data['name'] == request[0]:
+            for image in data['images'] : 
+                if image['id_image'] == request[1] : 
+                    s.sendto(bytes(json.dumps(image), encoding='utf-8'), addr)
+                    flag = True
     
     if not flag:
         s.sendto(bytes('Not Found', encoding='utf-8'), addr)
@@ -86,9 +102,9 @@ def handleReq(request, addr):
     elif (request[0] == '1'):
         handleReqShowAll(addr) 
     elif (request[0] == '2'):
-        handleRequestShowOne(request, addr) 
+        handleReqShowOne(request, addr) 
     elif (request[0] == '3'):
-        pass
+        handleReqDown(request, addr)
     else:
         pass
 
