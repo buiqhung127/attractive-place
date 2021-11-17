@@ -2,7 +2,7 @@ import socket
 import json
 
 
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 10000000 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 HOST = socket.gethostname()
 PORT = 8080
