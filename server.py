@@ -6,7 +6,7 @@ from client import handleEventShowAll
 
 
 MAXIMUM_CONNECTION = 10
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 10000000 # 10 mb
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # ipv4, UDP
 HOST = socket.gethostname()
 PORT = 8080
