@@ -1,117 +1,91 @@
-import socket
 import json
+import socket
+import time
 
-from client import handleEventShowAll
-
-
+from read_places import get_places
 
 MAXIMUM_CONNECTION = 10
-BUFFER_SIZE = 10000000 # 10 mb
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # ipv4, UDP
+BUFFER_SIZE = 10000000  # 10 mb
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # ipv4, UDP
 HOST = socket.gethostname()
 PORT = 8080
 
-data_json = [{
-    'id' : '1233123',
-    'name' : 'Chua Thien Mu',
-    'x_coor' : '20',
-    'y_coor' : '30',
-    'description' : 'noi day la mot danh lam thang canh thuoc thua thien hue',
-    'images' : [
-        {
-            'id_image' : '391283',
-            'directory' : '', # relative directory
-            'source' : '3891902j312njals312'
-        }
-    ]
-},
-{
-    'id' : '48908312',
-    'name' : 'Kinh Thanh Hue',
-    'x_coor' : '20',
-    'y_coor' : '30',
-    'description' : 'kkk thanh hue',
-    'images' : [
-        {
-            'id_image' : '911283',
-            'directory' : '', # relative directory
-            'source' : '091302j312njals312'
-        },
-        {
-            'id_image' : '123283',
-            'directory' : '', # relative directory
-            'source' : '1902j312njals312'
-        }
-    ]
-}
-]
-
-
+data_json = get_places()
 s.bind((HOST, PORT))
 
 
-def receiveReq():
+def receive_req():
     encoded_request, addr = s.recvfrom(BUFFER_SIZE)
     request = encoded_request.decode()
     return request, addr
 
-def handleReqConnection(addr):
+
+def handle_req_connection(addr):
     print(addr, 'is connecting to server !')
 
 
-def handleReqShowAll(addr):
-    data =''
-    for place in data_json:  
-        data =  data + ';' + json.dumps(place)
+def handle_req_show_all(addr):
+    data = ''
+    for place in data_json:
+        data = data + ';' + json.dumps(place)
     s.sendto(bytes(data, encoding='utf-8'), addr)
     print('Handled the show all request !')
 
 
-def handleReqShowOne(request, addr) :
+def handle_req_show_one(request, addr):
     request = request[1:]
     # print('|{}|'.format(request))
     flag = False
-    for data in data_json: 
-        if (data['name'] == request):
+    for data in data_json:
+        if data['name'] == request:
             s.sendto(bytes(json.dumps(data), encoding='utf-8'), addr)
             flag = True
-    
+
     if not flag:
         s.sendto(bytes('Not Found', encoding='utf-8'), addr)
 
 
-def handleReqDown(request, addr): 
+def handle_req_down(request, addr):
     request = request[1:]
     request = request.split(';')
     # print('|{}|'.format(request))
     flag = False
-    for data in data_json: 
+    for data in data_json['list']['resources']:
         if data['name'] == request[0]:
-            for image in data['images'] : 
-                if image['id_image'] == request[1] : 
-                    s.sendto(bytes(json.dumps(image), encoding='utf-8'), addr)
+            for image in data['images']:
+                if image['id_image'] == int(request[1]):
+                    # s.sendto(bytes(json.dumps(image), encoding='utf-8'), addr)
+                    send_image(image['directory'])
                     flag = True
-    
+
     if not flag:
         s.sendto(bytes('Not Found', encoding='utf-8'), addr)
 
 
-def handleReq(request, addr):
-    if (request[0] == '0'):
-        handleReqConnection(addr)
-    elif (request[0] == '1'):
-        handleReqShowAll(addr) 
-    elif (request[0] == '2'):
-        handleReqShowOne(request, addr) 
-    elif (request[0] == '3'):
-        handleReqDown(request, addr)
+def handle_req(request, addr):
+    if request[0] == '0':
+        handle_req_connection(addr)
+    elif request[0] == '1':
+        handle_req_show_all(addr)
+    elif request[0] == '2':
+        handle_req_show_one(request, addr)
+    elif request[0] == '3':
+        handle_req_down(request, addr)
     else:
         pass
 
 
+def send_image(directory):
+    file = open(directory, 'rb')
+    image_data = file.read(2048)
+
+    while image_data:
+        s.sendto(image_data, addr)
+        image_data = file.read(2048)
+        time.sleep(0.02)  # Give receiver a bit time to save
+
+
 if __name__ == '__main__':
     while True:
-        request, addr = receiveReq()
-        handleReq(request, addr)
-        
-
+        request, addr = receive_req()
+        handle_req(request, addr)
