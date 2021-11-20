@@ -24,10 +24,11 @@ def send_req_show_one():
 
 
 def send_req_down_one():
-    id_attraction = input('Input the name of attraction')
-    id_image = input('Input the id of the image')
+    id_attraction = input('Input the name of attraction : ')
+    id_image = input('Input the id of the image : ')
     msg = '3' + id_attraction + ';' + id_image
     client.sendto(bytes(msg, encoding='utf-8'), (HOST, PORT))
+    return id_attraction, id_image
 
 
 def handle_event_show_all():
@@ -35,10 +36,11 @@ def handle_event_show_all():
     data = encoded_event.decode('utf-8')
     data = data.split(';')
     final_data = []
+    print(type(data))
     for datum in data[1:]:
-        datum = json.loads(str(datum))
+        datum = json.loads(datum)
         final_data.append(datum)
-    return final_data
+    return final_data # return an array of JSON, then do whatever you want
 
 
 def handle_event_show_one():
@@ -46,36 +48,38 @@ def handle_event_show_one():
     data = encoded_event.decode('utf-8')
     if data == 'Not Found':
         print('The location is not found !')
-    else:
-        print('{}'.format(data))
-
-    return data  # json.loads(data) # handle the data later, must convert to json
+    return json.loads(data)  # json.loads(data), should ignore the directory
 
 
-def handle_event_down():
-    encoded_event, add = client.recvfrom(BUFFER_SIZE)
-    data = encoded_event.decode('utf-8')
-    if data == 'Not Found':
-        print('The image is not found !')
-    else:
-        print('{}'.format(data))
-    # return json.loads(data)
-    return data  # in json file, contain the not found string casee
+# def handle_event_down():
+#     encoded_event, add = client.recvfrom(BUFFER_SIZE)
+#     data = encoded_event.decode('utf-8')
+#     if data == 'Not Found':
+#         print('The image is not found !')
+#         return False 
+#     else:
+#         pass 
+#     return data  # in json file, contain the not found string casee
 
 
-def receive_image():
-    file_name = 'receive.jpg'
-    file = open(file_name, "wb")
-
+def receive_image(id_log, id_img): # return false or true 
+    file_name = '{}.jpg'.format(id_log + id_img)
+    file = open('images-client/' + file_name, "wb")
     while True:
         ready = select.select([client], [], [], timeout)
         if ready[0]:
             data, addr = client.recvfrom(2048)
-            file.write(data)
+            if (data == b'Not Found'): # not found is less than 2048 
+                print('The file does not exist !')
+                return False 
+            else : 
+                print('Downloading...')
+                file.write(data)
         else:
             print(f"{file_name} Finish!")
             file.close()
             break
+    return True 
 
 
 def process_command_line(cmd=4):
@@ -87,9 +91,8 @@ def process_command_line(cmd=4):
         send_req_show_one()
         print(handle_event_show_one())
     elif cmd == 3:
-        send_req_down_one()
-        # handleEventDown()
-        receive_image()
+        id_loc, id_img = send_req_down_one()
+        receive_image(id_loc, id_img)
     else:
         IS_RUNNING = False
 
@@ -110,4 +113,4 @@ if __name__ == '__main__':
     while IS_RUNNING:
         cmd = receive_query_from_key_board()
         process_command_line(cmd)
-    # need close connection
+    client.close()

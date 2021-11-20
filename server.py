@@ -26,7 +26,7 @@ def handle_req_connection(addr):
 
 def handle_req_show_all(addr):
     data = ''
-    for place in data_json:
+    for place in data_json['list']['resources']:
         data = data + ';' + json.dumps(place)
     s.sendto(bytes(data, encoding='utf-8'), addr)
     print('Handled the show all request !')
@@ -34,9 +34,8 @@ def handle_req_show_all(addr):
 
 def handle_req_show_one(request, addr):
     request = request[1:]
-    # print('|{}|'.format(request))
     flag = False
-    for data in data_json:
+    for data in data_json['list']['resources']:
         if data['name'] == request:
             s.sendto(bytes(json.dumps(data), encoding='utf-8'), addr)
             flag = True
@@ -48,13 +47,11 @@ def handle_req_show_one(request, addr):
 def handle_req_down(request, addr):
     request = request[1:]
     request = request.split(';')
-    # print('|{}|'.format(request))
     flag = False
     for data in data_json['list']['resources']:
         if data['name'] == request[0]:
             for image in data['images']:
                 if image['id_image'] == int(request[1]):
-                    # s.sendto(bytes(json.dumps(image), encoding='utf-8'), addr)
                     send_image(image['directory'])
                     flag = True
 
