@@ -52,9 +52,9 @@ def handle_req_down(request, addr):
         if data['name'] == request[0]:
             for image in data['images']:
                 if image['id_image'] == int(request[1]):
-                    send_image(image['directory'])
+                    # s.sendto(bytes(json.dumps(image), encoding='utf-8'), addr)
+                    send_image(image['directory'], addr)
                     flag = True
-
     if not flag:
         s.sendto(bytes('Not Found', encoding='utf-8'), addr)
 
@@ -72,7 +72,7 @@ def handle_req(request, addr):
         pass
 
 
-def send_image(directory):
+def send_image(directory, addr):
     file = open(directory, 'rb')
     image_data = file.read(2048)
 
