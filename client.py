@@ -1,8 +1,12 @@
+from ctypes import windll
 import json
+from os import path
 import select
 import socket
 from tkinter import *
 from types import SimpleNamespace
+from PIL import ImageTk,Image 
+
 BUFFER_SIZE = 10000000
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 HOST = socket.gethostname()
@@ -12,13 +16,75 @@ imgcounter = 1
 basename = "image%s.jpg"
 timeout = 3
 
+class LoadImage:
+    global img
+    def __init__(self,window,File):
+        frame = Frame(window)
+        self.canvas = Canvas(frame,width=900,height=900)
+        self.canvas.pack()
+        frame.pack()
+        self.orig_img = Image.open(File)
+        self.img = ImageTk.PhotoImage(self.orig_img)
+        self.canvas.create_image(0,0,image=self.img, anchor="nw")
 
+        self.zoomcycle = 0
+        self.zimg_id = None
+
+        window.bind("<MouseWheel>",self.zoomer)
+        self.canvas.bind("<Motion>",self.crop)
+
+    def zoomer(self,event):
+        if (event.delta > 0):
+            if self.zoomcycle != 4: self.zoomcycle += 1
+        elif (event.delta < 0):
+            if self.zoomcycle != 0: self.zoomcycle -= 1
+        self.crop(event)
+
+    def crop(self,event):
+        if self.zimg_id: self.canvas.delete(self.zimg_id)
+        if (self.zoomcycle) != 0:
+            x,y = event.x, event.y
+            if self.zoomcycle == 1:
+                tmp = self.orig_img.crop((x-45,y-30,x+45,y+30))
+            elif self.zoomcycle == 2:
+                tmp = self.orig_img.crop((x-30,y-20,x+30,y+20))
+            elif self.zoomcycle == 3:
+                tmp = self.orig_img.crop((x-15,y-10,x+15,y+10))
+            elif self.zoomcycle == 4:
+                tmp = self.orig_img.crop((x-6,y-4,x+6,y+4))
+            size = 300,200
+            self.zimg = ImageTk.PhotoImage(tmp.resize(size))
+            self.zimg_id = self.canvas.create_image(event.x,event.y,image=self.zimg)
+def openNewWindow():
+    global window
+    global App
+    global file_name
+    # Toplevel object which will
+    # be treated as a new window
+    newWindow = Toplevel(window)
+    newWindow.geometry("1200x900")
+    # sets the title of the
+    # Toplevel widget
+    newWindow.title("New Window")
+    # sets the geometry of toplevel
+    newWindow.geometry("1000x1000")
+    # A Label widget to show in toplevel
+    Label(newWindow,
+          text ="Scroll to zoom").pack()
+    path = './images-client/' + str(file_name)
+    LoadImage(newWindow,path)
+ 
 def send_req_show_all():
     msg = b'1'
     client.sendto(msg, (HOST, PORT))
 def send_req_show_one(name_place):
     msg = '2' + name_place
     client.sendto(bytes(msg, encoding='utf-8'), (HOST, PORT))
+
+def send_req_down_one(id_attraction,id_image):  
+    msg = '3' + id_attraction + ';' + id_image
+    client.sendto(bytes(msg, encoding='utf-8'), (HOST, PORT))
+    return id_attraction, id_image
 
 def handle_event_show_all():
     encoded_event, add = client.recvfrom(BUFFER_SIZE)
@@ -52,6 +118,7 @@ def handle_event_show_one():
 
 
 def receive_image(id_log, id_img):  # return false or true
+    global data_output
     file_name = '{}.jpg'.format(id_log + id_img)
     file = open('images-client/' + file_name, "wb")
     while True:
@@ -59,10 +126,11 @@ def receive_image(id_log, id_img):  # return false or true
         if ready[0]:
             data, addr = client.recvfrom(2048)
             if (data == b'Not Found'):  # not found is less than 2048
-                print('The file does not exist !')
+                data_output.delete('1.0', END)
+                data_output.insert('1.0', 'Not Found')
                 return False
             else:
-                print('Downloading...')
+                print('Receiving image...')
                 file.write(data)
         else:
             print(f"{file_name} Finish!")
@@ -98,6 +166,9 @@ def receive_query_from_key_board():
 
 def all_directions():
     global data_output
+    global img
+    #delete old image
+    img=None
     data_output.delete('1.0','end-1c')
     send_req_show_all()
     data_array = handle_event_show_all()
@@ -110,9 +181,18 @@ def all_directions():
         data_output.insert('4.0', "Vị trí địa lí (x,y): "+"("+str(data["vị trí địa lý"]["x_coor"])+","+str(data["vị trí địa lý"]["y_coor"])+")"+"\n")
     return data_output
 
+
 def search_one():
     global data_output
     global search_input
+    global pic_output
+    global img
+    global file_name
+    global output_sidebar
+    global window
+    global index
+    global data_array
+    global panel
     name_place=search_input.get('1.0','end-1c')
     data_output.delete('1.0', END)
     send_req_show_one(name_place)
@@ -121,13 +201,78 @@ def search_one():
     data_output.insert('2.0', "Tên: "+str(data_array["name"])+"\n")
     data_output.insert('3.0', "Miêu tả: "+str(data_array["description"])+"\n")
     data_output.insert('4.0', "Vị trí địa lí (x,y): "+"("+str(data_array["vị trí địa lý"]["x_coor"])+","+str(data_array["vị trí địa lý"]["y_coor"])+")"+"\n")
+    index=0
+    id_log, id_img = send_req_down_one(str(data_array["name"]), str(data_array["images"][index]["id_image"]))
+    receive_image(id_log, id_img)
+    file_name = '{}.jpg'.format(id_log + id_img)
+    print(file_name)
+    img = ImageTk.PhotoImage(Image.open('./images-client/' + file_name))
+    panel = Label(output_sidebar, image=img)
+    panel.pack(side=TOP, fill=X)
+    btn_zoom = Button(output_sidebar,
+                text ="Click to open a new window",
+                command = openNewWindow)
+    btn_zoom.pack(side=TOP, fill=X)
+    btn_next = Button(output_sidebar,
+                text ="Next",
+                command = next_img)
+    btn_next.pack(side=TOP, fill=X)
+    btn_previous = Button(output_sidebar,
+                text ="Previous",
+                command = previous_img)
+    btn_previous.pack(side=TOP, fill=X)
+    return data_output
+def next_img():
+    global data_output
+    global img
+    global file_name
+    global output_sidebar
+    global index
+    global data_array
+    global panel
+    if index<len(data_array["images"])-1:
+        index=index+1
+        id_log, id_img = send_req_down_one(str(data_array["name"]), str(data_array["images"][index]["id_image"]))
+        receive_image(id_log, id_img)
+        file_name = '{}.jpg'.format(id_log + id_img)
+        img = ImageTk.PhotoImage(Image.open('./images-client/' + file_name))
+        panel.destroy()
+        panel = Label(output_sidebar, image=img)
+        panel.pack(side=TOP, fill=X)
+        return data_output
+    else:
+        return data_output
+def previous_img():
+    global data_output
+    global img
+    global file_name
+    global output_sidebar
+    global index
+    global data_array
+    global panel
+    if index>0:
+        index=index-1
+        id_log, id_img = send_req_down_one(str(data_array["name"]), str(data_array["images"][index]["id_image"]))
+        receive_image(id_log, id_img)
+        file_name = '{}.jpg'.format(id_log + id_img)
+        img = ImageTk.PhotoImage(Image.open('./images-client/' + file_name))
+        panel.destroy()
+        panel = Label(output_sidebar, image=img)
+        panel.pack(side=TOP, fill=X)
+        return data_output
+    else:
+        return data_output
 def GUI():
     global data_output
     global search_input
+    global pic_output
+    global img
+    global output_sidebar
+    global window
     # create window
     window = Tk()
     window.title("Direction searching application")
-    window.geometry("1200x900")
+    window.geometry("1200x1000")
     window.configure(background='#FFFFFF')
     # searching sidebar
     search_sidebar = Frame(window, width=200, height=900, bg='#400028')
@@ -155,8 +300,6 @@ def GUI():
     # data label - picture
     pic_label = Label(output_sidebar, text="Picture", font=(
         "Helvetica", 20), bg='orange', fg='#FFFFFF')
-    # data output - picture
-    pic_output = Text(output_sidebar, width=100, height=20, bg='#FFFFFF')
     # place all elements on the window
     search_sidebar.pack(side=LEFT, fill=Y)
     search_label.pack(side=TOP, fill=X)
@@ -168,14 +311,15 @@ def GUI():
     data_label.pack(side=TOP, fill=X)
     data_output.pack(side=TOP, fill=X)
     pic_label.pack(side=TOP, fill=X)
-    pic_output.pack(side=TOP, fill=X)
+    
+   
     # to keep the window loop
     window.mainloop()
 
 
 if __name__ == '__main__':
     msg = b'0'
-    data_output = search_input = None
+    index=app=window=output_sidebar=data_output = search_input=pic_output=img=file_name=data_array= None
     client.sendto(msg, (HOST, PORT))
     # while IS_RUNNING:
     #     cmd = receive_query_from_key_board()
