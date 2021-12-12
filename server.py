@@ -1,6 +1,6 @@
 import json
 import socket
-import time
+import time 
 
 from read_places import get_places
 
