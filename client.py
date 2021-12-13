@@ -9,8 +9,11 @@ from PIL import ImageTk,Image
 
 BUFFER_SIZE = 10000000
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-HOST = socket.gethostname()
-PORT = 8080
+# socket.gethostname()
+# print(HOST)
+# PORT = 8080
+HOST = input("Enter the address : ")
+PORT = int(input("Enter the port : "))
 IS_RUNNING = True
 imgcounter = 1
 basename = "image%s.jpg"

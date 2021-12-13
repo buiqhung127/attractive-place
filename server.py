@@ -8,8 +8,9 @@ MAXIMUM_CONNECTION = 10
 BUFFER_SIZE = 10000000  # 10 mb
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # ipv4, UDP
 HOST = socket.gethostname()
+ADDRESS = socket.gethostbyname(HOST)
 PORT = 8080
-
+print(ADDRESS, PORT)
 data_json = get_places()
 s.bind((HOST, PORT))
 
