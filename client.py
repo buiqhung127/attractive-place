@@ -9,8 +9,11 @@ from PIL import ImageTk,Image
 
 BUFFER_SIZE = 10000000
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-HOST = socket.gethostname()
-PORT = 8080
+# socket.gethostname()
+# print(HOST)
+# PORT = 8080
+HOST = input("Enter the address : ")
+PORT = int(input("Enter the port : "))
 IS_RUNNING = True
 imgcounter = 1
 basename = "image%s.jpg"
@@ -62,15 +65,14 @@ def openNewWindow():
     # Toplevel object which will
     # be treated as a new window
     newWindow = Toplevel(window)
-    newWindow.geometry("1200x900")
     # sets the title of the
     # Toplevel widget
     newWindow.title("New Window")
     # sets the geometry of toplevel
-    newWindow.geometry("1000x1000")
+    newWindow.geometry("600x600")
     # A Label widget to show in toplevel
     Label(newWindow,
-          text ="Scroll to zoom").pack()
+          text ="Scroll to zoom").pack(side=TOP,fill=X)
     path = './images-client/' + str(file_name)
     LoadImage(newWindow,path)
  
@@ -167,6 +169,23 @@ def receive_query_from_key_board():
 def all_directions():
     global data_output
     global img
+    global output_sidebar
+    #delete all data in output_sidebar
+    output_sidebar.destroy()
+    output_sidebar = Frame(window, width=1000, height=900, bg='orange')
+    # data label - direction info
+    data_label = Label(output_sidebar, text="Data", font=(
+        "Helvetica", 20), bg='orange', fg='#FFFFFF')
+    # data output - direction info
+    data_output = Text(output_sidebar, width=100, height=20, bg='#FFFFFF')
+    # data label - picture
+    pic_label = Label(output_sidebar, text="Picture", font=(
+        "Helvetica", 20), bg='orange', fg='#FFFFFF')
+    # place all elements on the window
+    output_sidebar.pack(side=RIGHT, fill=Y)
+    data_label.pack(side=TOP, fill=X)
+    data_output.pack(side=TOP, fill=X)
+    pic_label.pack(side=TOP, fill=X)
     #delete old image
     img=None
     data_output.delete('1.0','end-1c')
