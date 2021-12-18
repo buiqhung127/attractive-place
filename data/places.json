@@ -90,19 +90,19 @@
         "images": [
           {
             "id_image": 0,
-            "directory": "data/photos/TDMSQ-1.jpg"
+            "directory": "data/photos/TDMSQN-1.jpg"
           },
           {
             "id_image": 1,
-            "directory": "data/photos/TDMSQ-2.jpg"
+            "directory": "data/photos/TDMSQN-2.jpg"
           },
           {
             "id_image": 2,
-            "directory": "data/photos/TDMSQ-3.jpg"
+            "directory": "data/photos/TDMSQN-3.jpg"
           },
           {
             "id_image": 3,
-            "directory": "data/photos/TDMSQ-4.jpg"
+            "directory": "data/photos/TDMSQN-4.jpg"
           }
         ]
       },
