@@ -12,8 +12,8 @@ client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # socket.gethostname()
 # print(HOST)
 # PORT = 8080
-HOST = input("Enter the address : ")
-PORT = int(input("Enter the port : "))
+# HOST = input("Enter the address : ")
+# PORT = int(input("Enter the port : "))
 IS_RUNNING = True
 imgcounter = 1
 basename = "image%s.jpg"
@@ -78,14 +78,28 @@ def openNewWindow():
  
 def send_req_show_all():
     msg = b'1'
-    client.sendto(msg, (HOST, PORT))
+    global ip_input
+    global port_input
+    ip=ip_input.get()
+    port=int(port_input.get())
+    client.sendto(msg, (ip, port))
+  
 def send_req_show_one(name_place):
     msg = '2' + name_place
-    client.sendto(bytes(msg, encoding='utf-8'), (HOST, PORT))
+    global ip_input
+    global port_input
+    ip=ip_input.get()
+    port=int(port_input.get())
+    
+    client.sendto(bytes(msg, encoding='utf-8'), (ip, port))
 
 def send_req_down_one(id_attraction,id_image):  
     msg = '3' + id_attraction + ';' + id_image
-    client.sendto(bytes(msg, encoding='utf-8'), (HOST, PORT))
+    global ip_input
+    global port_input
+    ip=ip_input.get()
+    port=int(port_input.get())
+    client.sendto(bytes(msg, encoding='utf-8'), (ip, port))
     return id_attraction, id_image
 
 def handle_event_show_all():
@@ -281,6 +295,12 @@ def previous_img():
         return data_output
     else:
         return data_output
+def connect():
+    global ip_input
+    global port_input
+    ip=ip_input.get()
+    port=int(port_input.get())
+    client.sendto(msg, (ip, port))
 def GUI():
     global data_output
     global search_input
@@ -288,6 +308,8 @@ def GUI():
     global img
     global output_sidebar
     global window
+    global ip_input
+    global port_input
     # create window
     window = Tk()
     window.title("Direction searching application")
@@ -295,6 +317,16 @@ def GUI():
     window.configure(background='#FFFFFF')
     # searching sidebar
     search_sidebar = Frame(window, width=200, height=900, bg='#400028')
+    lbl_ip=Label(search_sidebar,text="IP:")
+    lbl_ip.pack(side=LEFT)
+    ip_input=Entry(search_sidebar,width=15)
+    ip_input.pack(side=LEFT)
+    lbl_port=Label(search_sidebar,text="Port:")
+    lbl_port.pack(side=LEFT)
+    port_input=Entry(search_sidebar,width=15)
+    port_input.pack(side=LEFT)
+    btn_connect=Button(search_sidebar,text="Connect",command=connect)
+    btn_connect.pack(side=LEFT)
     # searching label - all directions
     search_label = Label(search_sidebar, text="All directions", font=(
         "Helvetica", 20), bg='#400028', fg='#FFFFFF')
@@ -339,7 +371,7 @@ def GUI():
 if __name__ == '__main__':
     msg = b'0'
     index=app=window=output_sidebar=data_output = search_input=pic_output=img=file_name=data_array= None
-    client.sendto(msg, (HOST, PORT))
+    ip_input=port_input=None
     # while IS_RUNNING:
     #     cmd = receive_query_from_key_board()
     #     process_command_line(cmd)
