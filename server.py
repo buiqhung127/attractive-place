@@ -10,7 +10,9 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # ipv4, UDP
 HOST = socket.gethostname()
 ADDRESS = socket.gethostbyname(HOST)
 PORT = 8080
-print(ADDRESS, PORT)
+print('Address: ', ADDRESS)
+print('Port: ', PORT)
+
 data_json = get_places()
 s.bind((HOST, PORT))
 
@@ -22,13 +24,15 @@ def receive_req():
 
 
 def handle_req_connection(addr):
-    print(addr, 'is connecting to server !')
+    # print(addr, 'is connecting to server !')
+    # udp so we just do nothing
+    pass
 
 
 def handle_req_show_all(addr):
     data = ''
     for place in data_json['list']['resources']:
-        data = data + ';' + json.dumps(place)
+        data = data + ';;;-;;;' + json.dumps(place)
     s.sendto(bytes(data, encoding='utf-8'), addr)
     print('Handled the show all request !')
 
@@ -47,7 +51,7 @@ def handle_req_show_one(request, addr):
 
 def handle_req_down(request, addr):
     request = request[1:]
-    request = request.split(';')
+    request = request.split(';;;-;;;')
     flag = False
     for data in data_json['list']['resources']:
         if data['name'] == request[0]:

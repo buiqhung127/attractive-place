@@ -94,7 +94,7 @@ def send_req_show_one(name_place):
     client.sendto(bytes(msg, encoding='utf-8'), (ip, port))
 
 def send_req_down_one(id_attraction,id_image):  
-    msg = '3' + id_attraction + ';' + id_image
+    msg = '3' + id_attraction + ';;;-;;;' + id_image
     global ip_input
     global port_input
     ip=ip_input.get()
@@ -105,7 +105,7 @@ def send_req_down_one(id_attraction,id_image):
 def handle_event_show_all():
     encoded_event, add = client.recvfrom(BUFFER_SIZE)
     data = encoded_event.decode('utf-8')
-    data = data.split(';')
+    data = data.split(';;;-;;;')
     final_data = []
     print(type(data))
     for datum in data[1:]:
